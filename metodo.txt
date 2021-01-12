@@ -1,0 +1,10 @@
+alguém manda uma mensagem com +tag
+checa se existe essa tag
+caso exista só coloca o ip de quem mandou +tag numa lista com nome da tag
+caso não exista, cria a tag no db e coloca o ip
+sempre que alguém manda uma mensagem com a tag os ips na lista da tag recebem ela(msg)
+se tiver ou # ou + depois de uma # ou + no texto, reportar erro
+quando manda mensagem -tag
+ip do cara sai da lista com a tag
+
+##kill fecha todas as conexões e terminar execução ao receber de qualquer cliente
