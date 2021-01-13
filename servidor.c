@@ -8,6 +8,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 
+#define IPv 4
 #define BUFSZ 1024
 
 void usage(int argc, char **argv) {
@@ -17,40 +18,7 @@ void usage(int argc, char **argv) {
 }
 
 int main(int argc, char **argv) {
-    if (argc < 3) {
-        usage(argc, argv);
-    }
-
-    struct sockaddr_storage storage;
-    if (0 != server_sockaddr_init(argv[1], argv[2], &storage)) {
-        usage(argc, argv);
-    }
-
-    int s;
-    s = socket(storage.ss_family, SOCK_STREAM, 0);
-    if (s == -1) {
-        logexit("socket");
-    }
-
-    // isso pra poder abrir um server na mesma porta sem esperar
-    int enable = 1;
-    if (0 != setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int))) {
-        logexit("setsockopt");
-    }
-
-    /* bind the socket to a port (bind = juntar)*/
-    struct sockaddr *addr = (struct sockaddr *)(&storage);
-    if (0 != bind(s, addr, sizeof(storage))) {
-        logexit("bind");
-    }
-
-    if (0 != listen(s, 10)) {
-        logexit("listen");
-    }
-
-    char addrstr[BUFSZ];
-    addrtostr(addr, addrstr, BUFSZ);
-    printf("bound to %s, waiting connections\n", addrstr);
+    int s = initSocketServer(argc, argv, IPv);
 
     while (1) {
         struct sockaddr_storage cstorage;

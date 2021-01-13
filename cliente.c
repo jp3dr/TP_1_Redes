@@ -18,29 +18,7 @@ void usage(int argc, char **argv) {
 #define BUFSZ 1024
 
 int main(int argc, char **argv) {
-	if (argc < 3) {
-		usage(argc, argv);
-	}
-
-	struct sockaddr_storage storage;
-	if (0 != addrparse(argv[1], argv[2], &storage)) {
-		usage(argc, argv);
-	}
-
-	int s;
-	s = socket(storage.ss_family, SOCK_STREAM, 0);
-	if (s == -1) {
-		logexit("socket");
-	}
-	struct sockaddr *addr = (struct sockaddr *)(&storage);
-	if (0 != connect(s, addr, sizeof(storage))) {
-		logexit("connect");
-	}
-
-	char addrstr[BUFSZ];
-	addrtostr(addr, addrstr, BUFSZ);
-
-	printf("connected to %s\n", addrstr);
+	int s = connectToServer(argc, argv);
 
 	char buf[BUFSZ];
 	memset(buf, 0, BUFSZ);

@@ -132,3 +132,21 @@ void addrtostr(const struct sockaddr *addr, char *str, size_t strsize) {
         snprintf(str, strsize, "IPv%d %s %hu", version, addrstr, port);
     }
 }
+
+
+int connectToServer(int argc, char **argv) {
+    if (argc < 3) _usage(argv[0]);
+    struct sockaddr_storage storage;
+    if(0 != addrparse(argv[1], argv[2], &storage)) _usage(argv[0]);
+
+    int s = socket(storage.ss_family, SOCK_STREAM, 0);
+    if(s == -1) logexit("socket");
+
+    struct sockaddr *addr = (struct sockaddr *)(&storage);
+    if(0 != connect(s, addr, sizeof(storage))) logexit("connect");
+
+    char addrstr[BUFSZ];
+    addrtostr(addr, addrstr, BUFSZ);
+    printf("Connected to %s\n", addrstr);
+    return s;
+}
