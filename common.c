@@ -104,7 +104,7 @@ int addrparse(const char *addrstr, const char *portstr,
     return -1;
 }
 
-void addrtostr(const struct sockaddr *addr, char *str, size_t strsize) {
+int addrtostr(const struct sockaddr *addr, char *str, size_t strsize) {
     int version;
     char addrstr[INET6_ADDRSTRLEN + 1] = "";
     uint16_t port;
@@ -121,6 +121,8 @@ void addrtostr(const struct sockaddr *addr, char *str, size_t strsize) {
         snprintf(str, strsize, "IPv%d %s %hu", version, addrstr, port);
     }
 
+    return (int)port;
+}
 
 int connectToServer(int argc, char **argv) {
     if (argc < 3)

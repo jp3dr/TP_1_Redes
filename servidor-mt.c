@@ -28,7 +28,7 @@ void *client_thread(void *data) {
     struct sockaddr *caddr = (struct sockaddr *)(&cdata->storage);
 
     char caddrstr[BUFSZ];
-    addrtostr(caddr, caddrstr, BUFSZ);
+    int clientPort = addrtostr(caddr, caddrstr, BUFSZ); //maneira de diferenciar cada client
     printf("[log] connection from %s\n", caddrstr);
 
     char buf[BUFSZ];
