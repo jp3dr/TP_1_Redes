@@ -144,3 +144,32 @@ int connectToServer(int argc, char **argv) {
     printf("Connected to %s\n", addrstr);
     return s;
 }
+
+void send1(int s) {
+    unsigned char buf[BUFSZ];
+    buf[0] = 1;
+    if (send(s, buf, BUFSZ, 0) != BUFSZ)
+        logexit("send");
+}
+
+char send2(int s) {
+    printf("> ");
+    unsigned char buf[BUFSZ];
+    buf[0] = 2;
+    buf[1] = fgets(buf, BUFSZ - 1, stdin);
+    // getchar(); // must be here due to the '\n'
+    size_t count = send(s, buf, strlen(buf) + 1, 0);
+    if (count != strlen(buf) + 1) {
+        logexit("send");
+    }
+    
+    return buf;
+}
+
+void connectionUp(int s) {
+    unsigned char buf[BUFSZ];
+    memset(buf, 0, BUFSZ);
+    size_t count = recv(s, buf, BUFSZ, 0);
+    if (BUFSZ != (int)count)
+        logexit("recvByte");
+}

@@ -26,10 +26,8 @@ struct client_data {
 void *client_thread(void *data) {
     struct client_data *cdata = (struct client_data *)data;
     struct sockaddr *caddr = (struct sockaddr *)(&cdata->storage);
-
     char caddrstr[BUFSZ];
     int clientPort = addrtostr(caddr, caddrstr, BUFSZ); //maneira de diferenciar cada client
-    printf("[log] connection from %s\n", caddrstr);
 
     char buf[BUFSZ];
     memset(buf, 0, BUFSZ);
@@ -65,6 +63,8 @@ int main(int argc, char **argv) {
         }
         cdata->csock = csock;
         memcpy(&(cdata->storage), &cstorage, sizeof(cstorage));
+
+        send1(csock);
 
         pthread_t tid;
         pthread_create(&tid, NULL, client_thread, cdata);
