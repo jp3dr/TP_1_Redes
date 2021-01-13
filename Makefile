@@ -1,8 +1,8 @@
 all:
 	gcc -Wall -c common.c
-	gcc -Wall client.c common.o -o client
-	gcc -Wall server.c common.o -o server
-	gcc -Wall server-mt.c common.o -lpthread -o server-mt
+	gcc -Wall cliente.c common.o -o cliente
+	gcc -Wall servidor.c common.o -o servidor
+	gcc -Wall servidor-mt.c common.o -lpthread -o servidor-mt
 
 clean:
-	rm common.o client server server-mt
+	rm common.o cliente servidor servidor-mt

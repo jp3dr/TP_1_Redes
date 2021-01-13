@@ -6,6 +6,8 @@
 
 void logexit(const char *msg);
 
+int initSocketServer(int argc, char **argv, int proto);
+
 int addrparse(const char *addrstr, const char *portstr,
               struct sockaddr_storage *storage);
 

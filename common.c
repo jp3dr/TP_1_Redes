@@ -5,9 +5,69 @@
 
 #include <arpa/inet.h>
 
+#define BUFSZ 501
+
 void logexit(const char *msg) {
-	perror(msg);
-	exit(EXIT_FAILURE);
+    perror(msg);
+    exit(EXIT_FAILURE);
+}
+
+void _usage(char *name) {
+    printf("usage: %s <ip-servidor> <porta-servidor>\n", name);
+    printf("example: %s: 127.0.0.1 51511\n", name);
+    exit(EXIT_FAILURE);
+}
+
+void _usage2(char *name) {
+    printf("usage: %s <porta>\n", name);
+    printf("example: %s: 51511\n", name);
+    exit(EXIT_FAILURE);
+}
+
+int server_sockaddr_init(const char *proto, const char *portstr,
+                         struct sockaddr_storage *storage) {
+    uint16_t port = (uint16_t)atoi(portstr); // unsigned short
+    if (port == 0) {
+        return -1;
+    }
+    port = htons(port); // host to network short
+
+    memset(storage, 0, sizeof(*storage));
+
+    struct sockaddr_in *addr4 = (struct sockaddr_in *)storage;
+    addr4->sin_family = AF_INET;
+    addr4->sin_addr.s_addr = INADDR_ANY;
+    addr4->sin_port = port;
+    return 0;
+}
+
+int initSocketServer(int argc, char **argv, int proto) {
+    if (argc < 2)
+        _usage2(argv[0]);
+
+    struct sockaddr_storage storage;
+    if (0 != server_sockaddr_init(proto, argv[1], &storage))
+        _usage2(argv[0]);
+
+    int s = socket(storage.ss_family, SOCK_STREAM, 0);
+    if (s == -1)
+        logexit("socket");
+
+    int enable = 1;
+    if (0 != setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)))
+        logexit("setsockopt");
+
+    struct sockaddr *addr = (struct sockaddr *)(&storage);
+    if (0 != bind(s, addr, sizeof(storage)))
+        logexit("bind");
+    if (0 != listen(s, 10))
+        logexit("listen");
+
+    char addrstr[BUFSZ];
+    addrtostr(addr, addrstr, BUFSZ);
+    // printf("bound to %s, waiting connection\n", addrstr);
+    printf("[log] waiting connection\n");
+    return s;
 }
 
 int addrparse(const char *addrstr, const char *portstr,
@@ -70,31 +130,5 @@ void addrtostr(const struct sockaddr *addr, char *str, size_t strsize) {
     }
     if (str) {
         snprintf(str, strsize, "IPv%d %s %hu", version, addrstr, port);
-    }
-}
-
-int server_sockaddr_init(const char *proto, const char *portstr,
-                         struct sockaddr_storage *storage) {
-    uint16_t port = (uint16_t)atoi(portstr); // unsigned short
-    if (port == 0) {
-        return -1;
-    }
-    port = htons(port); // host to network short
-
-    memset(storage, 0, sizeof(*storage));
-    if (0 == strcmp(proto, "v4")) {
-        struct sockaddr_in *addr4 = (struct sockaddr_in *)storage;
-        addr4->sin_family = AF_INET;
-        addr4->sin_addr.s_addr = INADDR_ANY;
-        addr4->sin_port = port;
-        return 0;
-    } else if (0 == strcmp(proto, "v6")) {
-        struct sockaddr_in6 *addr6 = (struct sockaddr_in6 *)storage;
-        addr6->sin6_family = AF_INET6;
-        addr6->sin6_addr = in6addr_any;
-        addr6->sin6_port = port;
-        return 0;
-    } else {
-        return -1;
     }
 }
