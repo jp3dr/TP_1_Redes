@@ -1,5 +1,5 @@
-#include "common.h"
-
+#include "libs/common.h"
+#include "libs/socketHandler.h"
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
