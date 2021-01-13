@@ -109,41 +109,33 @@ void addrtostr(const struct sockaddr *addr, char *str, size_t strsize) {
     char addrstr[INET6_ADDRSTRLEN + 1] = "";
     uint16_t port;
 
-    if (addr->sa_family == AF_INET) {
-        version = 4;
-        struct sockaddr_in *addr4 = (struct sockaddr_in *)addr;
-        if (!inet_ntop(AF_INET, &(addr4->sin_addr), addrstr,
-                       INET6_ADDRSTRLEN + 1)) {
-            logexit("ntop");
-        }
-        port = ntohs(addr4->sin_port); // network to host short
-    } else if (addr->sa_family == AF_INET6) {
-        version = 6;
-        struct sockaddr_in6 *addr6 = (struct sockaddr_in6 *)addr;
-        if (!inet_ntop(AF_INET6, &(addr6->sin6_addr), addrstr,
-                       INET6_ADDRSTRLEN + 1)) {
-            logexit("ntop");
-        }
-        port = ntohs(addr6->sin6_port); // network to host short
-    } else {
-        logexit("unknown protocol family.");
+    version = 4;
+    struct sockaddr_in *addr4 = (struct sockaddr_in *)addr;
+    if (!inet_ntop(AF_INET, &(addr4->sin_addr), addrstr,
+                   INET6_ADDRSTRLEN + 1)) {
+        logexit("ntop");
     }
+    port = ntohs(addr4->sin_port); // network to host short
+
     if (str) {
         snprintf(str, strsize, "IPv%d %s %hu", version, addrstr, port);
     }
-}
 
 
 int connectToServer(int argc, char **argv) {
-    if (argc < 3) _usage(argv[0]);
+    if (argc < 3)
+        _usage(argv[0]);
     struct sockaddr_storage storage;
-    if(0 != addrparse(argv[1], argv[2], &storage)) _usage(argv[0]);
+    if (0 != addrparse(argv[1], argv[2], &storage))
+        _usage(argv[0]);
 
     int s = socket(storage.ss_family, SOCK_STREAM, 0);
-    if(s == -1) logexit("socket");
+    if (s == -1)
+        logexit("socket");
 
     struct sockaddr *addr = (struct sockaddr *)(&storage);
-    if(0 != connect(s, addr, sizeof(storage))) logexit("connect");
+    if (0 != connect(s, addr, sizeof(storage)))
+        logexit("connect");
 
     char addrstr[BUFSZ];
     addrtostr(addr, addrstr, BUFSZ);
