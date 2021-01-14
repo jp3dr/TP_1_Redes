@@ -10,7 +10,7 @@
 #include <sys/types.h>
 
 #define IPv 4
-#define BUFSZ 501
+#define BUFSZ 1024
 
 void usage(int argc, char **argv) {
     printf("usage: %s <v4|v6> <server port>\n", argv[0]);
@@ -27,18 +27,24 @@ void *client_thread(void *data) {
     struct client_data *cdata = (struct client_data *)data;
     struct sockaddr *caddr = (struct sockaddr *)(&cdata->storage);
     char caddrstr[BUFSZ];
-    int clientPort = addrtostr(caddr, caddrstr, BUFSZ); //maneira de diferenciar cada client
+    int clientPort =
+        addrtostr(caddr, caddrstr, BUFSZ); // maneira de diferenciar cada client
 
     char buf[BUFSZ];
-    memset(buf, 0, BUFSZ);
-    size_t count = recv(cdata->csock, buf, BUFSZ - 1, 0);
-    printf("[msg] %s, %d bytes: %s\n", caddrstr, (int)count, buf);
+    while (1) {
+        memset(buf, 0, BUFSZ);
+        size_t count = recv(cdata->csock, buf, BUFSZ - 1, 0);
+        printf("[msg] %s, %d bytes: %s\n", caddrstr, (int)count, buf);
 
-    sprintf(buf, "remote endpoint: %.100s\n", caddrstr);
-    count = send(cdata->csock, buf, strlen(buf) + 1, 0);
-    if (count != strlen(buf) + 1) {
-        logexit("send");
+        memset(buf, 0, BUFSZ);
+        buf[0]=3;
+        // sprintf(buf, "remote endpoint: %.100s\n", caddrstr);
+        count = send(cdata->csock, buf, strlen(buf), 0);
+        if (count != strlen(buf)) {
+            logexit("send");
+        }
     }
+
     close(cdata->csock);
 
     pthread_exit(EXIT_SUCCESS);

@@ -22,17 +22,22 @@ int main(int argc, char **argv) {
     connectionUp(s);
 
     char buf[BUFSZ];
-	unsigned total = 0;
-    memset(buf, 0, BUFSZ);
-	while(1){
-		char*mensagem = send2(s);
-		size_t count = recv(s, buf + total, BUFSZ - total, 0);
+    unsigned total = 0;
+    while (1) {
+        memset(buf, 0, BUFSZ);
+
+        char *mensagem = send2(s);
+        size_t count = recv(s, buf, BUFSZ - total, 0);
+
+        if ((int)buf[0] == 3) {
+            printf("acerto mizeravi\n");
+        }
         // if (count == 0) {
         //     // Connection terminated.
         //     break;
         // }
         total += count;
-	}
+    }
 
     // memset(buf, 0, BUFSZ);
     // unsigned total = 0;
