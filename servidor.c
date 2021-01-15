@@ -19,6 +19,12 @@ typedef struct reg {
     struct reg *prox;
 } Tag;
 
+struct client_data {
+    int csock;
+    struct sockaddr_storage storage;
+    Tag *tags;
+};
+
 Tag *busca(char *x, Tag *le) {
     Tag *p;
     p = le;
@@ -47,6 +53,8 @@ void insere(char *x, Tag *p) {
             aux = aux->prox;
         aux->prox = nova;
     }
+    printf("p: %s\n", aux->clients[5]);
+    printf("p: %s\n", aux->name);
 }
 
 void usage(int argc, char **argv) {
@@ -55,11 +63,7 @@ void usage(int argc, char **argv) {
     exit(EXIT_FAILURE);
 }
 
-struct client_data {
-    int csock;
-    struct sockaddr_storage storage;
-    Tag *tags;
-};
+
 
 void *client_thread(void *data) {
     struct client_data *cdata = (struct client_data *)data;
@@ -73,90 +77,84 @@ void *client_thread(void *data) {
         memset(buf, 0, BUFSZ);
         size_t count = recv(cdata->csock, buf, BUFSZ - 1, 0);
         printf("[msg] %s, %d bytes: %s\n", caddrstr, (int)count, buf);
-        printf("%s\n", buf);
-        int i;
+
         int j;
-        int k;
         int l;
 
         size_t tam = strlen(buf);
-        char *tagAux[tam];
-
+        char tagAux[tam];
+        printf("tam: %d\n", (int)tam);
         Tag *TagAux;
 
-        for (i = 0, j = 0; i < tam; i++) {
+        if (buf[0] == '+') {
+            // checa se está no início ou precedido de espaço
+            memset(tagAux, 0, tam);
 
-            if (buf[0] == '+') {
-                // checa se está no início ou precedido de espaço
-                printf("aqui\n");
-                memset(tagAux, 0, tam);
+            // verifica se tag é válida e copia para tagAux
+            for (j = 0; j < tam; j++) {
 
-                printf("%s\n", buf);
-
-                // verifica se tag é válida e copia para tagAux
-                for (j = i + 1, k = 0; j < tam; j++, k++) {
-
-                    tagAux[k] = buf[j];
-
-                    if (buf[j] == '#' || buf[j] == '-' ||
-                        (buf[j] == '+' && j > i)) {
-                        logexit("BadMsg: put space between new tag call");
-                    }
+                tagAux[j] = buf[j];
+                if (buf[j] == '#' || buf[j] == '-' ||
+                    (buf[j] == '+' && j != 0)) {
+                    logexit("BadMsg: put space between new tag call");
                 }
-
-                printf("%s\n", tagAux);
-
-                // ve se tag já foi criada
-                TagAux = busca(tagAux, cdata->tags);
-
-                memset(buf, 0, BUFSZ);
-                buf[0] = 3;
-                char *msg;
-
-                if (TagAux != NULL) {
-                    // ve todos os clientes cadastrados na tag
-                    for (l = 0; l < 100; l++) {
-                        // se elemento está vazio
-                        if (strcmp(TagAux->clients[l], "0")) {
-                            TagAux->clients[l] = (char)clientPort;
-                            msg = "subscribed ";
-                            break;
-                        }
-                        // se client já está nessa tag
-                        else if (strcmp(TagAux->clients[l], (char)clientPort)) {
-                            msg = "already subscribed ";
-                            break;
-                        } else if (l == 99) {
-                            // tag lotada
-                            msg = "tag lotada ";
-                        }
-                    }
-                } else {
-                    insere(buf, cdata->tags);
-                    msg = "subscribed ";
-                }
-
-                snprintf(buf, BUFSZ, "%s%s%s", msg, "+", tagAux);
-                printf("%s\n", buf);
-                break;
             }
-            //  else if (buf[i] == '-') {
-            //     if ((i == 1) || (buf[i - 1] == ' ') || (buf[i + 4] == '\n'))
-            //     {
 
-            //     } else {
-            //         logexit("BadMsg: - invalid");
-            //     }
-            // } else if (buf[i] == '#') {
-            //     if ((i == 1) || (buf[i - 1] == ' ') || (buf[i + 4] == '\n'))
-            //     {
-            //         if ((i == 0) || (buf[i - 1] == ' ')) {
-            //         }
-            //     } else {
-            //         logexit("BadMsg: # invalid");
-            //     }
-            // }
+            // ve se tag já foi criada
+            TagAux = busca(tagAux, cdata->tags);
+
+            memset(buf, 0, BUFSZ);
+            char *msg;
+
+            if (TagAux != NULL) {
+                // ve todos os clientes cadastrados na tag
+                for (l = 0; l < 100; l++) {
+                    // se elemento está vazio
+                    if (strcmp(TagAux->clients[l], "0")) {
+                        TagAux->clients[l] = (char *)clientPort;
+                        printf("%s\n", TagAux->clients[l]);
+                        msg = "subscribed ";
+                        break;
+                    }
+                    // se client já está nessa tag
+                    else if (strcmp(TagAux->clients[l], (char *)clientPort)) {
+                        printf("strcmp: %s\n", TagAux->clients[l]);
+                        msg = "already subscribed ";
+                        break;
+                    } else if (l == 99) {
+                        // tag lotada
+                        msg = "tag lotada ";
+                    }
+                }
+            } else {
+                
+                printf("name T0: %s\n", cdata->tags->name);
+                insere(tagAux + 1, &cdata);
+                printf("p1: %s\n", cdata->tags->clients[5]);
+                printf("p1: %s\n", cdata->tags->name);
+                msg = "subscribed ";
+            }
+
+            snprintf(buf, BUFSZ, "%d%s%s", 3, msg, tagAux);
+            printf("%s\n", buf);
         }
+        //  else if (buf[i] == '-') {
+        //     if ((i == 1) || (buf[i - 1] == ' ') || (buf[i + 4] == '\n'))
+        //     {
+
+        //     } else {
+        //         logexit("BadMsg: - invalid");
+        //     }
+        // } else if (buf[i] == '#') {
+        //     if ((i == 1) || (buf[i - 1] == ' ') || (buf[i + 4] == '\n'))
+        //     {
+        //         if ((i == 0) || (buf[i - 1] == ' ')) {
+        //         }
+        //     } else {
+        //         logexit("BadMsg: # invalid");
+        //     }
+        // }
+
         // sprintf(buf, "remote endpoint: %.100s\n", caddrstr);
         count = send(cdata->csock, buf, strlen(buf), 0);
         if (count != strlen(buf)) {
@@ -171,10 +169,10 @@ void *client_thread(void *data) {
 
 int main(int argc, char **argv) {
     int s = initSocketServer(argc, argv, IPv);
-    Tag tags;
-    tags.name = " ";
-    tags.prox = NULL;
-
+    Tag* tags;
+    tags->name = "aids";
+    tags->prox = NULL;
+    // printf("name T0: %s\n", tags->name);
     while (1) {
         struct sockaddr_storage cstorage;
         struct sockaddr *caddr = (struct sockaddr *)(&cstorage);
@@ -190,13 +188,13 @@ int main(int argc, char **argv) {
             logexit("malloc");
         }
         cdata->csock = csock;
-        cdata->tags = &tags;
+        cdata->tags = tags;
         memcpy(&(cdata->storage), &cstorage, sizeof(cstorage));
 
         send1(csock);
 
         pthread_t tid;
-        pthread_create(&tid, NULL, client_thread, cdata);
+        pthread_create(&tid, NULL, client_thread, &cdata);
     }
 
     exit(EXIT_SUCCESS);

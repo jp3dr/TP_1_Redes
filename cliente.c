@@ -28,9 +28,8 @@ int main(int argc, char **argv) {
 
         char *mensagem = send2(s);
         size_t count = recv(s, buf, BUFSZ - total, 0);
-
-        if ((int)buf[0] == 3) {
-            printf("acerto mizeravi\n");
+        if (buf[0] == '3') {
+            printf("< %s\n", buf + 1);
         }
         // if (count == 0) {
         //     // Connection terminated.

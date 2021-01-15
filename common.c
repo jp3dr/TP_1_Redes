@@ -159,7 +159,6 @@ char* send2(int s) {
     unsigned char buf[BUFSZ];
     fgets(buf, BUFSZ - 1, stdin);
     const int tamanhoMsg = strlen(buf);
-    buf[tamanhoMsg] = '\n';
     // getchar(); // must be here due to the '\n'
     size_t count = send(s, buf, strlen(buf) + 1, 0);
     if (count != strlen(buf) + 1) {
