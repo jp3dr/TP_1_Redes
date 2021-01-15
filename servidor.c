@@ -28,20 +28,21 @@ struct client_data {
 Tag *busca(char *x, Tag *le) {
     Tag *p;
     p = le;
-    while (p != NULL && strcmp(p->name, x))
+    printf("buscaP: %s\n", le->clients[5]);
+    printf("buscaP: %s\n", le->name);
+   
+    while (p != NULL && strcmp(p->name, x) != 0)
         p = p->prox;
     return p;
 }
 
-void insere(char *x, Tag *p) {
+void insere0(char *x, Tag *p) {
     Tag *nova;
     Tag *aux;
     aux = p;
-    
-    printf("pantes: %s\n", p->name);
-    if (p->name == "aids") {
+
+    if (p->name == " ") {
         p->name = x;
-        printf("x: %s\n", x);
         p->prox = NULL;
 
         int i;
@@ -62,8 +63,6 @@ void insere(char *x, Tag *p) {
             aux = aux->prox;
         aux->prox = nova;
     }
-    printf("p: %s\n", p->clients[5]);
-    printf("p: %s\n", p->name);
 }
 
 void usage(int argc, char **argv) {
@@ -82,16 +81,18 @@ void *client_thread(void *data) {
     char buf[BUFSZ];
     while (1) {
         memset(buf, 0, BUFSZ);
+        printf("p2: %s\n", cdata->tags->clients[0]);
+        printf("p2: %s\n", cdata->tags->name);
         size_t count = recv(cdata->csock, buf, BUFSZ - 1, 0);
         printf("[msg] %s, %d bytes: %s\n", caddrstr, (int)count, buf);
-
+        printf("test");
         int j;
         int l;
 
         size_t tam = strlen(buf);
         char tagAux[tam];
-        printf("tam: %d\n", (int)tam);
         Tag *TagAux;
+        TagAux = malloc(sizeof(Tag));
 
         if (buf[0] == '+') {
             // checa se está no início ou precedido de espaço
@@ -109,7 +110,7 @@ void *client_thread(void *data) {
 
             // ve se tag já foi criada
             TagAux = busca(tagAux, cdata->tags);
-
+            // limpa buffer
             memset(buf, 0, BUFSZ);
             char *msg;
 
@@ -134,10 +135,10 @@ void *client_thread(void *data) {
                     }
                 }
             } else {
-
-                printf("name T0: %s\n", cdata->tags->name);
-                insere(tagAux + 1, cdata->tags);
-                printf("p1: %s\n", cdata->tags->clients[5]);
+                printf("p0: %s\n", cdata->tags->clients[0]);
+                printf("p0: %s\n", cdata->tags->name);
+                insere0(tagAux + 1, cdata->tags);
+                printf("p1: %s\n", cdata->tags->clients[0]);
                 printf("p1: %s\n", cdata->tags->name);
                 msg = "subscribed ";
             }
@@ -178,11 +179,11 @@ int main(int argc, char **argv) {
     int s = initSocketServer(argc, argv, IPv);
     Tag *tags;
     tags = malloc(sizeof(Tag));
-
-    tags->name = "aids";
+    tags->name = " ";
     tags->prox = NULL;
 
     while (1) {
+        printf("Tname: %s\n", tags->name);
         struct sockaddr_storage cstorage;
         struct sockaddr *caddr = (struct sockaddr *)(&cstorage);
         socklen_t caddrlen = sizeof(cstorage);
@@ -197,8 +198,9 @@ int main(int argc, char **argv) {
             logexit("malloc");
         }
         cdata->csock = csock;
+
         cdata->tags = tags;
-        printf("name T0: %s\n", cdata->tags->name);
+        printf("Cname: %s\n", cdata->tags->name);
         memcpy(&(cdata->storage), &cstorage, sizeof(cstorage));
 
         send1(csock);
