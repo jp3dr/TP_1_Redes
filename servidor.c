@@ -37,24 +37,33 @@ void insere(char *x, Tag *p) {
     Tag *nova;
     Tag *aux;
     aux = p;
-    nova = malloc(sizeof(Tag));
-    nova->name = x;
-    nova->prox = NULL;
+    
+    printf("pantes: %s\n", p->name);
+    if (p->name == "aids") {
+        p->name = x;
+        printf("x: %s\n", x);
+        p->prox = NULL;
 
-    int i;
-    for (i = 0; i < 100; i++) {
-        nova->clients[i] = "0";
-    }
-
-    if (p->name != " ") {
-        p = nova;
+        int i;
+        for (i = 0; i < 100; i++) {
+            p->clients[i] = "0";
+        }
     } else {
+        nova = malloc(sizeof(Tag));
+        nova->name = x;
+        printf("x: %s\n", x);
+        nova->prox = NULL;
+
+        int i;
+        for (i = 0; i < 100; i++) {
+            nova->clients[i] = "0";
+        }
         while (aux->prox != NULL)
             aux = aux->prox;
         aux->prox = nova;
     }
-    printf("p: %s\n", aux->clients[5]);
-    printf("p: %s\n", aux->name);
+    printf("p: %s\n", p->clients[5]);
+    printf("p: %s\n", p->name);
 }
 
 void usage(int argc, char **argv) {
@@ -62,8 +71,6 @@ void usage(int argc, char **argv) {
     printf("example: %s v4 51511\n", argv[0]);
     exit(EXIT_FAILURE);
 }
-
-
 
 void *client_thread(void *data) {
     struct client_data *cdata = (struct client_data *)data;
@@ -127,9 +134,9 @@ void *client_thread(void *data) {
                     }
                 }
             } else {
-                
+
                 printf("name T0: %s\n", cdata->tags->name);
-                insere(tagAux + 1, &cdata);
+                insere(tagAux + 1, cdata->tags);
                 printf("p1: %s\n", cdata->tags->clients[5]);
                 printf("p1: %s\n", cdata->tags->name);
                 msg = "subscribed ";
@@ -169,10 +176,12 @@ void *client_thread(void *data) {
 
 int main(int argc, char **argv) {
     int s = initSocketServer(argc, argv, IPv);
-    Tag* tags;
+    Tag *tags;
+    tags = malloc(sizeof(Tag));
+
     tags->name = "aids";
     tags->prox = NULL;
-    // printf("name T0: %s\n", tags->name);
+
     while (1) {
         struct sockaddr_storage cstorage;
         struct sockaddr *caddr = (struct sockaddr *)(&cstorage);
@@ -189,12 +198,13 @@ int main(int argc, char **argv) {
         }
         cdata->csock = csock;
         cdata->tags = tags;
+        printf("name T0: %s\n", cdata->tags->name);
         memcpy(&(cdata->storage), &cstorage, sizeof(cstorage));
 
         send1(csock);
 
         pthread_t tid;
-        pthread_create(&tid, NULL, client_thread, &cdata);
+        pthread_create(&tid, NULL, client_thread, cdata);
     }
 
     exit(EXIT_SUCCESS);
