@@ -24,6 +24,26 @@ void _usage2(char *name) {
     exit(EXIT_FAILURE);
 }
 
+int addrtostr(const struct sockaddr *addr, char *str, size_t strsize) {
+    int version;
+    char addrstr[INET6_ADDRSTRLEN + 1] = "";
+    uint16_t port;
+
+    version = 4;
+    struct sockaddr_in *addr4 = (struct sockaddr_in *)addr;
+    if (!inet_ntop(AF_INET, &(addr4->sin_addr), addrstr,
+                   INET6_ADDRSTRLEN + 1)) {
+        logexit("ntop");
+    }
+    port = ntohs(addr4->sin_port); // network to host short
+
+    if (str) {
+        snprintf(str, strsize, "IPv%d %s %hu", version, addrstr, port);
+    }
+
+    return (int)port;
+}
+
 int server_sockaddr_init(const char *proto, const char *portstr,
                          struct sockaddr_storage *storage) {
     uint16_t port = (uint16_t)atoi(portstr); // unsigned short
@@ -104,25 +124,7 @@ int addrparse(const char *addrstr, const char *portstr,
     return -1;
 }
 
-int addrtostr(const struct sockaddr *addr, char *str, size_t strsize) {
-    int version;
-    char addrstr[INET6_ADDRSTRLEN + 1] = "";
-    uint16_t port;
 
-    version = 4;
-    struct sockaddr_in *addr4 = (struct sockaddr_in *)addr;
-    if (!inet_ntop(AF_INET, &(addr4->sin_addr), addrstr,
-                   INET6_ADDRSTRLEN + 1)) {
-        logexit("ntop");
-    }
-    port = ntohs(addr4->sin_port); // network to host short
-
-    if (str) {
-        snprintf(str, strsize, "IPv%d %s %hu", version, addrstr, port);
-    }
-
-    return (int)port;
-}
 
 int connectToServer(int argc, char **argv) {
     if (argc < 3)
