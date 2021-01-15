@@ -24,7 +24,14 @@ void _usage2(char *name) {
     exit(EXIT_FAILURE);
 }
 
-int addrtostr(const struct sockaddr *addr, char *str, size_t strsize) {
+int getClientPort(const struct sockaddr *addr){
+    uint16_t port;
+    struct sockaddr_in *addr4 = (struct sockaddr_in *)addr;
+    port = ntohs(addr4->sin_port); // network to host short
+    return (int)port;
+}
+
+void addrtostr(const struct sockaddr *addr, char *str, size_t strsize) {
     int version;
     char addrstr[INET6_ADDRSTRLEN + 1] = "";
     uint16_t port;
@@ -40,8 +47,6 @@ int addrtostr(const struct sockaddr *addr, char *str, size_t strsize) {
     if (str) {
         snprintf(str, strsize, "IPv%d %s %hu", version, addrstr, port);
     }
-
-    return (int)port;
 }
 
 int server_sockaddr_init(const char *proto, const char *portstr,
@@ -69,7 +74,8 @@ int initSocketServer(int argc, char **argv, int proto) {
     if (0 != server_sockaddr_init(proto, argv[1], &storage))
         _usage2(argv[0]);
 
-    int s = socket(storage.ss_family, SOCK_STREAM, 0);
+    int s;
+    s = socket(storage.ss_family, SOCK_STREAM, 0);
     if (s == -1)
         logexit("socket");
 

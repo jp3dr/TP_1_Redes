@@ -19,6 +19,8 @@ typedef struct reg {
     struct reg *prox;
 } Tag;
 
+Tag *tags;
+
 struct client_data {
     int csock;
     struct sockaddr_storage storage;
@@ -30,16 +32,13 @@ Tag *busca(char *x, Tag *le) {
     p = le;
     printf("buscaP: %s\n", le->clients[5]);
     printf("buscaP: %s\n", le->name);
-   
+
     while (p != NULL && strcmp(p->name, x) != 0)
         p = p->prox;
     return p;
 }
 
 void insere0(char *x, Tag *p) {
-    Tag *nova;
-    Tag *aux;
-    aux = p;
 
     if (p->name == " ") {
         p->name = x;
@@ -50,6 +49,9 @@ void insere0(char *x, Tag *p) {
             p->clients[i] = "0";
         }
     } else {
+        Tag *nova;
+        Tag *aux;
+        aux = p;
         nova = malloc(sizeof(Tag));
         nova->name = x;
         printf("x: %s\n", x);
@@ -74,20 +76,18 @@ void usage(int argc, char **argv) {
 void *client_thread(void *data) {
     struct client_data *cdata = (struct client_data *)data;
     struct sockaddr *caddr = (struct sockaddr *)(&cdata->storage);
-    char caddrstr[BUFSZ];
-    int clientPort =
-        addrtostr(caddr, caddrstr, BUFSZ); // maneira de diferenciar cada client
 
+    int clientPort = getClientPort(caddr); // maneira de diferenciar cada client
+    int j;
+    int l;
     char buf[BUFSZ];
     while (1) {
         memset(buf, 0, BUFSZ);
         printf("p2: %s\n", cdata->tags->clients[0]);
         printf("p2: %s\n", cdata->tags->name);
         size_t count = recv(cdata->csock, buf, BUFSZ - 1, 0);
-        printf("[msg] %s, %d bytes: %s\n", caddrstr, (int)count, buf);
+        printf("[msg] %d, %d bytes: %s\n", clientPort, (int)count, buf);
         printf("test");
-        int j;
-        int l;
 
         size_t tam = strlen(buf);
         char tagAux[tam];
@@ -96,7 +96,7 @@ void *client_thread(void *data) {
 
         if (buf[0] == '+') {
             // checa se está no início ou precedido de espaço
-            memset(tagAux, 0, tam);
+            memset(tagAux, "0", tam);
 
             // verifica se tag é válida e copia para tagAux
             for (j = 0; j < tam; j++) {
@@ -163,6 +163,7 @@ void *client_thread(void *data) {
         //     }
         // }
 
+        free(TagAux);
         // sprintf(buf, "remote endpoint: %.100s\n", caddrstr);
         count = send(cdata->csock, buf, strlen(buf), 0);
         if (count != strlen(buf)) {
@@ -177,7 +178,7 @@ void *client_thread(void *data) {
 
 int main(int argc, char **argv) {
     int s = initSocketServer(argc, argv, IPv);
-    Tag *tags;
+
     tags = malloc(sizeof(Tag));
     tags->name = " ";
     tags->prox = NULL;
